@@ -288,6 +288,9 @@ type MockClient struct {
 	registry       Registry
 }
 
+func (c *MockClient) OnObserve(FnOnObserve) {
+}
+
 func (c *MockClient) AddObjectInstance(LWM2MObjectType, int) error {
 	return nil
 }

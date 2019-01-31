@@ -39,6 +39,8 @@ type FnOnDeregistered func()
 // Event Callback when an error occurs
 type FnOnError func()
 
+type FnOnObserve func(string)
+
 type OperationType byte
 
 type EventType int
@@ -175,6 +177,7 @@ type LWM2MClient interface {
 	OnWrite(FnOnWrite)
 	OnExecute(FnOnExecute)
 	OnError(FnOnError)
+	OnObserve(FnOnObserve)
 }
 
 // Lwm2mRequest interface represents an incoming request from a server

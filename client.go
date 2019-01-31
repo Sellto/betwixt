@@ -3,14 +3,15 @@ package betwixt
 import (
 	"errors"
 	"log"
-
+	"strings"
 	"github.com/thingspin/canopus"
 )
 
 // NewLwm2mClient instantiates a new instance of LWM2M Client
 func NewLwm2mClient(name, local, remote string, registry Registry) LWM2MClient {
 	server := canopus.NewServer()
-	conn, _ := canopus.Dial("")
+	conn, _ := canopus.Dial(remote)
+
 
 	// Create Mandatory
 	c := &DefaultLWM2MClient{
@@ -42,12 +43,13 @@ type DefaultLWM2MClient struct {
 	evtOnWrite   FnOnWrite
 	evtOnExecute FnOnExecute
 	evtOnError   FnOnError
+	evtOnObserve FnOnObserve
 }
 
 // Register this client to a LWM2M Server instance
 // name must be unique and be less than 10 characers
 func (c *DefaultLWM2MClient) Register(name string) (string, error) {
-	if len(name) > 10 {
+	if len(name) > 50 {
 		return "", errors.New("Client name can not exceed 10 characters")
 	}
 
@@ -65,6 +67,7 @@ func (c *DefaultLWM2MClient) Register(name string) (string, error) {
 	}
 	c.path = path
 
+	c.coapConn.Close()
 	return path, nil
 }
 
@@ -101,6 +104,11 @@ func (c *DefaultLWM2MClient) Deregister() {
 // Update ;
 func (c *DefaultLWM2MClient) Update() {
 
+}
+
+func (c *DefaultLWM2MClient) Notify(payload []byte) {
+	s := c.coapServer
+	s.Notify("/3200/0", payload, true)
 }
 
 // AddResource ;
@@ -173,8 +181,12 @@ func (c *DefaultLWM2MClient) Start() {
 	})
 
 	s.OnObserve(func(resource string, msg canopus.Message) {
-		log.Println("Observe Requested")
+		log.Printf("Observe Requested on %s\n", resource)
+		if c.evtOnObserve != nil {
+			c.evtOnObserve(resource)
+		}
 	})
+
 
 	s.Get("/:obj/:inst/:rsrc", c.handleReadRequest)
 	s.Get("/:obj/:inst", c.handleReadRequest)
@@ -189,7 +201,10 @@ func (c *DefaultLWM2MClient) Start() {
 	s.Post("/:obj/:inst", c.handleCreateRequest)
 
 	// sooskim c.coapServer.Start()
-	c.coapServer.ListenAndServe("")
+	con := c.coapConn.(*canopus.UDPConnection).GetConn()
+	a := strings.Split(con.LocalAddr().String(), ":")[1]
+
+	c.coapServer.ListenAndServe(a)
 }
 
 // Handles LWM2M Create Requests (not to be mistaken for/not the same as  CoAP PUT)
@@ -228,13 +243,16 @@ func (c *DefaultLWM2MClient) handleReadRequest(req canopus.Request) canopus.Resp
 	attrResource := req.GetAttribute("rsrc")
 	objectID := req.GetAttributeAsInt("obj")
 	instanceID := req.GetAttributeAsInt("inst")
+	path := req.GetMessage().GetURIPath()
 
 	var resourceID = -1
 
 	if attrResource != "" {
 		resourceID = req.GetAttributeAsInt("rsrc")
 	}
-
+	if path == "/3200/0" {
+		resourceID = 5505
+	}
 	t := LWM2MObjectType(objectID)
 	obj := c.GetObject(t)
 	enabler := obj.GetEnabler()
@@ -250,7 +268,7 @@ func (c *DefaultLWM2MClient) handleReadRequest(req canopus.Request) canopus.Resp
 			// TODO: Return TLV of Object Instance
 			msg.Code = canopus.CoapCodeNotFound
 		} else {
-			if !IsReadableResource(resource) {
+			if path != "/3200/0" && !IsReadableResource(resource) {
 				msg.Code = canopus.CoapCodeMethodNotAllowed
 			} else {
 				lwReq := Default(req, OPERATIONTYPE_READ)
@@ -403,6 +421,6 @@ func (c *DefaultLWM2MClient) OnError(fn FnOnError) {
 	c.evtOnError = fn
 }
 
-func (c *DefaultLWM2MClient) OnObserve(fn FnOnError) {
-
+func (c *DefaultLWM2MClient) OnObserve(fn FnOnObserve) {
+	c.evtOnObserve = fn
 }
