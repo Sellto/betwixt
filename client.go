@@ -243,16 +243,13 @@ func (c *DefaultLWM2MClient) handleReadRequest(req canopus.Request) canopus.Resp
 	attrResource := req.GetAttribute("rsrc")
 	objectID := req.GetAttributeAsInt("obj")
 	instanceID := req.GetAttributeAsInt("inst")
-	path := req.GetMessage().GetURIPath()
 
 	var resourceID = -1
 
 	if attrResource != "" {
 		resourceID = req.GetAttributeAsInt("rsrc")
 	}
-	if path == "/3200/0" {
-		resourceID = 5505
-	}
+	
 	t := LWM2MObjectType(objectID)
 	obj := c.GetObject(t)
 	enabler := obj.GetEnabler()
@@ -268,7 +265,7 @@ func (c *DefaultLWM2MClient) handleReadRequest(req canopus.Request) canopus.Resp
 			// TODO: Return TLV of Object Instance
 			msg.Code = canopus.CoapCodeNotFound
 		} else {
-			if path != "/3200/0" && !IsReadableResource(resource) {
+			if !IsReadableResource(resource) {
 				msg.Code = canopus.CoapCodeMethodNotAllowed
 			} else {
 				lwReq := Default(req, OPERATIONTYPE_READ)
