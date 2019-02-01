@@ -69,7 +69,7 @@ func CreateTlvIdentifierField(ident uint16) []byte {
 	if ident > 255 {
 		// 16-Bit
 		bs := make([]byte, 2)
-		binary.LittleEndian.PutUint16(bs, uint16(ident))
+		binary.BigEndian.PutUint16(bs, uint16(ident))
 
 		return bs
 	} else {

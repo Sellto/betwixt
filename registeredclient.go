@@ -3,14 +3,13 @@ package betwixt
 import (
 	"fmt"
 	"log"
-	"net"
 	"time"
 
-	. "github.com/zubairhamed/canopus"
+	. "github.com/lgln/canopus"
 )
 
 // Returns a new instance of DefaultRegisteredClient implementing RegisteredClient
-func NewRegisteredClient(ep string, id string, addr string, coapServer CoapServer) RegisteredClient {
+func NewRegisteredClient(ep string, id string, addr string, coapServer CoapServer, coapConn Connection) RegisteredClient {
 	return &DefaultRegisteredClient{
 		name:       ep,
 		id:         id,
@@ -18,6 +17,7 @@ func NewRegisteredClient(ep string, id string, addr string, coapServer CoapServe
 		regDate:    time.Now(),
 		updateDate: time.Now(),
 		coapServer: coapServer,
+		coapConn:   coapConn,
 	}
 }
 
@@ -32,6 +32,7 @@ type DefaultRegisteredClient struct {
 	regDate        time.Time
 	updateDate     time.Time
 	coapServer     CoapServer
+	coapConn       Connection
 	enabledObjects map[LWM2MObjectType]Object
 }
 
@@ -92,10 +93,10 @@ func (c *DefaultRegisteredClient) ReadObject(obj uint16, inst uint16) (Value, er
 }
 
 func (c *DefaultRegisteredClient) ReadResource(obj uint16, inst uint16, rsrc uint16) (Value, error) {
-	rAddr, _ := net.ResolveUDPAddr("udp", c.addr)
+	//sooskim rAddr, _ := net.ResolveUDPAddr("udp", c.addr)
 
 	uri := fmt.Sprintf("/%d/%d/%d", obj, inst, rsrc)
-	req := NewRequest(MessageConfirmable, Get, GenerateMessageID())
+	req := NewRequest(MessageConfirmable, Get)
 	req.SetRequestURI(uri)
 
 	resourceDefinition := c.GetObject(LWM2MObjectType(obj)).GetDefinition().GetResource(LWM2MResourceType(rsrc))
@@ -105,13 +106,13 @@ func (c *DefaultRegisteredClient) ReadResource(obj uint16, inst uint16, rsrc uin
 		req.SetMediaType(MediaTypeTextPlainVndOmaLwm2m)
 	}
 
-	response, err := c.coapServer.SendTo(req, rAddr)
+	response, err := c.coapConn.Send(req)
 
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	responseValue, _ := DecodeResourceValue(LWM2MResourceType(rsrc), response.GetMessage().Payload.GetBytes(), resourceDefinition)
+	responseValue, _ := DecodeResourceValue(LWM2MResourceType(rsrc), response.GetMessage().GetPayload().GetBytes(), resourceDefinition)
 
 	return responseValue, nil
 }

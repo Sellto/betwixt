@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/zubairhamed/canopus"
+	"github.com/lgln/canopus"
 )
 
 type TestDeviceObject struct {
@@ -101,7 +101,7 @@ func (o *TestDeviceObject) OnRead(instanceId int, resourceId int, req Lwm2mReque
 }
 
 func (o *TestDeviceObject) OnWrite(instanceId int, resourceId int, req Lwm2mRequest) Lwm2mResponse {
-	val := req.GetMessage().Payload
+	val := req.GetMessage().GetPayload()
 
 	switch resourceId {
 	case 13:
@@ -286,6 +286,9 @@ func NewMockClient() LWM2MClient {
 type MockClient struct {
 	enabledObjects map[LWM2MObjectType]Object
 	registry       Registry
+}
+
+func (c *MockClient) OnObserve(FnOnObserve) {
 }
 
 func (c *MockClient) AddObjectInstance(LWM2MObjectType, int) error {

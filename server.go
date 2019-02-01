@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zubairhamed/canopus"
+	"github.com/lgln/canopus"
 )
 
 type ServerConfig map[string]string
 
 func NewLwm2mServer(name string, store Store, cfg ServerConfig) *LWM2MServer {
-	coapServer := canopus.NewLocalServer(name)
+	coapServer := canopus.NewServer()
 
 	return &LWM2MServer{
 		Name:       name,
@@ -27,6 +27,7 @@ type LWM2MServer struct {
 	Name       string
 	Store      Store
 	CoapServer canopus.CoapServer
+	CoapConn   canopus.Connection
 	Config     ServerConfig
 	Stats      ServerStatistics
 	Events     map[EventType]FnEvent
@@ -45,7 +46,8 @@ func (c *LWM2MServer) OnDeregistered(fn FnOnDeregistered) {
 }
 
 func (b *LWM2MServer) Serve() error {
-	b.CoapServer.OnMessage(func(msg *canopus.Message, inbound bool) {
+
+	b.CoapServer.OnMessage(func(msg canopus.Message, inbound bool) {
 		b.Stats.IncrementCoapRequestsCount()
 	})
 
@@ -53,14 +55,16 @@ func (b *LWM2MServer) Serve() error {
 	b.CoapServer.Put("/rd/:id", FnCoapUpdateClient(b))
 	b.CoapServer.Delete("/rd/:id", FnCoapDeleteClient(b))
 
-	go b.CoapServer.Start()
+	addr := b.Config["addr"]
+
+	go b.CoapServer.ListenAndServe(addr)
 
 	return nil
 }
 
 func (b *LWM2MServer) Register(ep string, addr string, resources []*canopus.CoreResource) (string, error) {
 	clientId := canopus.GenerateToken(8)
-	cli := NewRegisteredClient(ep, clientId, addr, b.CoapServer)
+	cli := NewRegisteredClient(ep, clientId, addr, b.CoapServer, b.CoapConn)
 
 	objs := make(map[LWM2MObjectType]Object)
 
@@ -94,10 +98,12 @@ func (b *LWM2MServer) Register(ep string, addr string, resources []*canopus.Core
 }
 
 func (b *LWM2MServer) Delete(id string) {
+	log.Println("server.Delete")
 	b.Store.DeleteClient(id)
 }
 
 func (b *LWM2MServer) Update(id string) {
+	log.Println("server.Update")
 	b.Store.UpdateTS(id)
 }
 
@@ -118,21 +124,22 @@ func (b *LWM2MServer) GetServerStats() ServerStatistics {
 }
 
 func FnCoapRegisterClient(b *LWM2MServer) canopus.RouteHandler {
-	return func(req canopus.CoapRequest) canopus.CoapResponse {
+	return func(req canopus.Request) canopus.Response {
 		ep := req.GetURIQuery("ep")
 
 		// lt := req.GetUriQuery("lt")
 		// sms := req.GetUriQuery("sms")
 		// binding := req.GetUriQuery("b")
 
-		resources := canopus.CoreResourcesFromString(req.GetMessage().Payload.String())
-		clientId, err := b.Register(ep, req.GetAddress().String(), resources)
+		resources := canopus.CoreResourcesFromString(req.GetMessage().GetPayload().String())
+		//sooskim clientId, err := b.Register(ep, req.GetAddress().String(), resources)
+		clientId, err := b.Register(ep, "", resources)
 		if err != nil {
 			log.Println("Error registering client ", ep)
 		}
 
-		msg := canopus.NewMessageOfType(canopus.MessageAcknowledgment, req.GetMessage().MessageID)
-		msg.Token = req.GetMessage().Token
+		msg := canopus.NewMessageOfType(canopus.MessageAcknowledgment, req.GetMessage().GetMessageId(), canopus.NewEmptyPayload()).(*canopus.CoapMessage)
+		msg.Token = req.GetMessage().GetToken()
 		msg.AddOption(canopus.OptionLocationPath, "rd/"+clientId)
 		msg.Code = canopus.CoapCodeCreated
 
@@ -141,13 +148,13 @@ func FnCoapRegisterClient(b *LWM2MServer) canopus.RouteHandler {
 }
 
 func FnCoapUpdateClient(b *LWM2MServer) canopus.RouteHandler {
-	return func(req canopus.CoapRequest) canopus.CoapResponse {
+	return func(req canopus.Request) canopus.Response {
 		id := req.GetAttribute("id")
 
 		b.Update(id)
 
-		msg := canopus.NewMessageOfType(canopus.MessageAcknowledgment, req.GetMessage().MessageID)
-		msg.Token = req.GetMessage().Token
+		msg := canopus.NewMessageOfType(canopus.MessageAcknowledgment, req.GetMessage().GetMessageId(), canopus.NewEmptyPayload()).(*canopus.CoapMessage)
+		msg.Token = req.GetMessage().GetToken()
 		msg.Code = canopus.CoapCodeChanged
 
 		return canopus.NewResponseWithMessage(msg)
@@ -155,13 +162,13 @@ func FnCoapUpdateClient(b *LWM2MServer) canopus.RouteHandler {
 }
 
 func FnCoapDeleteClient(b *LWM2MServer) canopus.RouteHandler {
-	return func(req canopus.CoapRequest) canopus.CoapResponse {
+	return func(req canopus.Request) canopus.Response {
 		id := req.GetAttribute("id")
 
 		b.Delete(id)
 
-		msg := canopus.NewMessageOfType(canopus.MessageAcknowledgment, req.GetMessage().MessageID)
-		msg.Token = req.GetMessage().Token
+		msg := canopus.NewMessageOfType(canopus.MessageAcknowledgment, req.GetMessage().GetMessageId(), canopus.NewEmptyPayload()).(*canopus.CoapMessage)
+		msg.Token = req.GetMessage().GetToken()
 		msg.Code = canopus.CoapCodeDeleted
 
 		return canopus.NewResponseWithMessage(msg)

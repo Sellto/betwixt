@@ -3,8 +3,8 @@ package objects
 import (
 	"log"
 
-	. "github.com/zubairhamed/betwixt"
-	"github.com/zubairhamed/canopus"
+	. "github.com/thingspin/betwixt"
+	"github.com/lgln/canopus"
 )
 
 type FirmwareObject struct {

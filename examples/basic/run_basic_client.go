@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/zubairhamed/betwixt"
-	"github.com/zubairhamed/betwixt/examples"
-	"github.com/zubairhamed/betwixt/examples/objects"
+	"github.com/thingspin/betwixt"
+	"github.com/thingspin/betwixt/examples"
+	"github.com/thingspin/betwixt/examples/objects"
 )
 
 func main() {
 	cli := examples.StandardCommandLineFlags()
 
 	registry := betwixt.NewDefaultObjectRegistry()
-	c := betwixt.NewLwm2mClient("TestClient", ":0", cli.Server, registry)
+	// c := betwixt.NewLwm2mClient("TestClient", ":0", cli.Server, registry)
+	c := betwixt.NewLwm2mClient("TestClient", ":0", "leshan.eclipse.org:5683", registry)
 
 	setupResources(c, registry)
 
