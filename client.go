@@ -108,7 +108,7 @@ func (c *DefaultLWM2MClient) Update() {
 
 func (c *DefaultLWM2MClient) Notify(resource string, payload []byte) {
 	s := c.coapServer
-	s.Notify(resource, payload, true)
+	s.(*canopus.DefaultCoapServer).Notify(resource, payload, true)
 }
 
 // AddResource ;
@@ -201,8 +201,8 @@ func (c *DefaultLWM2MClient) Start() {
 	s.Post("/:obj/:inst", c.handleCreateRequest)
 
 	// sooskim c.coapServer.Start()
-	con := c.coapConn.(*canopus.UDPConnection).GetConn()
-	a := strings.Split(con.LocalAddr().String(), ":")[1]
+	local := c.coapConn.(*canopus.UDPConnection).LocalAddr()
+	a := strings.Split(local, ":")[1]
 
 	c.coapServer.ListenAndServe(a)
 }
