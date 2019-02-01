@@ -1,7 +1,7 @@
 package betwixt
 
 import (
-	"github.com/thingspin/canopus"
+	"github.com/lgln/canopus"
 )
 
 // Default is a helper/shortcut method which creates a Default LWM2M Request

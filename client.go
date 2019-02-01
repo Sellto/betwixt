@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log"
 	"strings"
-	"github.com/thingspin/canopus"
+	"github.com/lgln/canopus"
 )
 
 // NewLwm2mClient instantiates a new instance of LWM2M Client

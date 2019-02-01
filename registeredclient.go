@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	. "github.com/thingspin/canopus"
+	. "github.com/lgln/canopus"
 )
 
 // Returns a new instance of DefaultRegisteredClient implementing RegisteredClient

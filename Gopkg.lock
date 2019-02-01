@@ -30,7 +30,7 @@
 
 ## [[projects]]
 ##   branch = "no-openssl"
-##   name = "github.com/thingspin/canopus"
+##   name = "github.com/lgln/canopus"
 ##   packages = ["."]
 ##   revision = "6917c0ad13868d1e60b382db32f5db82f7479971"
 

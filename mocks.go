@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/thingspin/canopus"
+	"github.com/lgln/canopus"
 )
 
 type TestDeviceObject struct {

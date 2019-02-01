@@ -35,7 +35,7 @@
 
 ## [[constraint]]
 ##   branch = "no-openssl"
-##   name = "github.com/thingspin/canopus"
+##   name = "github.com/lgln/canopus"
 
 [[constraint]]
   name = "github.com/zenazn/goji"

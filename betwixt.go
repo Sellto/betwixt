@@ -3,7 +3,7 @@ package betwixt
 import (
 	"time"
 
-	"github.com/thingspin/canopus"
+	"github.com/lgln/canopus"
 )
 
 // LWM2MObjectType represents a LWM2M Object Type
