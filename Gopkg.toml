@@ -33,9 +33,9 @@
   branch = "master"
   name = "github.com/kylelemons/go-gypsy"
 
-## [[constraint]]
-##   branch = "no-openssl"
-##   name = "github.com/lgln/canopus"
+[[constraint]]
+   branch = "thingspin"
+   name = "github.com/lgln/canopus"
 
 [[constraint]]
   name = "github.com/zenazn/goji"
