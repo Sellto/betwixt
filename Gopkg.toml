@@ -34,7 +34,7 @@
   name = "github.com/kylelemons/go-gypsy"
 
 [[constraint]]
-   branch = "thingspin"
+   branch = "master"
    name = "github.com/lgln/canopus"
 
 [[constraint]]
