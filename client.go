@@ -106,9 +106,9 @@ func (c *DefaultLWM2MClient) Update() {
 
 }
 
-func (c *DefaultLWM2MClient) Notify(payload []byte) {
+func (c *DefaultLWM2MClient) Notify(resource string, payload []byte) {
 	s := c.coapServer
-	s.Notify("/3200/0", payload, true)
+	s.Notify(resource, payload, true)
 }
 
 // AddResource ;
