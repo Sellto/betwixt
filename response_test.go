@@ -2,7 +2,7 @@ package betwixt
 
 import (
 	"github.com/stretchr/testify/assert"
-	. "github.com/thingspin/canopus"
+	. "github.com/lgln/canopus"
 	"testing"
 )
 

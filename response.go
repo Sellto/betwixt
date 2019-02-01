@@ -3,7 +3,7 @@
 package betwixt
 
 import (
-	"github.com/thingspin/canopus"
+	"github.com/lgln/canopus"
 )
 
 // Created creates a LWM2M Response (CreatedResponse) with CoAP code 201 - Created

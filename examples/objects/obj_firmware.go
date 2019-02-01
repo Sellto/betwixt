@@ -4,7 +4,7 @@ import (
 	"log"
 
 	. "github.com/thingspin/betwixt"
-	"github.com/thingspin/canopus"
+	"github.com/lgln/canopus"
 )
 
 type FirmwareObject struct {
